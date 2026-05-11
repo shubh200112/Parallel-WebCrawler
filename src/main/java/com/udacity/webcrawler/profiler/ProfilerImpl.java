@@ -1,12 +1,12 @@
 package com.udacity.webcrawler.profiler;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import static java.nio.file.StandardOpenOption.APPEND;
-import static java.nio.file.StandardOpenOption.CREATE;
+import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
@@ -55,18 +55,19 @@ public <T> T wrap(Class<T> klass, T delegate) {
           new ProfilingMethodInterceptor(clock, state, delegate));
 }
 
-  @Override
-  public void writeData(Path path) {
+@Override
+public void writeData(Path path) {
+  try (Writer writer = Files.newBufferedWriter(
+      path,
+      StandardOpenOption.CREATE,
+      StandardOpenOption.APPEND)) {
 
-    try (Writer writer =
-             Files.newBufferedWriter(path, CREATE, APPEND)) {
+    writeData(writer);
 
-      writeData(writer);
-
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  } catch (IOException e) {
+    throw new UncheckedIOException(e);
   }
+}
 
   @Override
   public void writeData(Writer writer) throws IOException {
